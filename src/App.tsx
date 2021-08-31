@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
+import { useQuery } from "react-query";
 // API
 import API from "./API";
 // Styles
@@ -19,37 +20,21 @@ export type Curencies = {
 const FETCH_INTERVAL = 15000;
 
 const App: React.FC = () => {
-  const [data, setData] = useState<Curencies>();
   const [currency, setCurrency] = useState("INR");
-  const [error, setError] = useState(false);
-  const initial = useRef(true);
+
+  const { data, isLoading, error } = useQuery(
+    "get-bitcoin-data",
+    API.getBitcoinData,
+    {
+      refetchInterval: FETCH_INTERVAL,
+    }
+  );
 
   const handleCurencySelection = (e: any) => {
     setCurrency(e.currentTarget.value);
   };
 
-  useEffect(() => {
-    const getBitcoinData = async () => {
-      const data = await API.getBitcoinData();
-      setData(data);
-    };
-
-    try {
-      if (initial.current) {
-        getBitcoinData();
-        initial.current = false;
-      }
-
-      const timer = setInterval(() => {
-        getBitcoinData();
-      }, FETCH_INTERVAL);
-
-      return () => clearInterval(timer);
-    } catch {
-      setError(true);
-    }
-  }, []);
-
+  if (isLoading) return <div>Loading ...</div>;
   if (error) return <div>Something went wrong ...</div>;
 
   return (
